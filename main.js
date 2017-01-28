@@ -25,6 +25,7 @@ var player = {
 	rotAccel: 0.02
 };
 var asteroids = [];
+var asteroidBaseVel = 2;
 
 /* Three.js Stuff */
 
@@ -66,33 +67,75 @@ function init() {
 	loop();
 }
 
+function spawnAsteroid( size ) {
+	var asteroid = {
+		vel: {
+			x: ( Math.random() - 0.5 ) * asteroidBaseVel,
+			y: ( Math.random() - 0.5 ) * asteroidBaseVel,
+			rx: 0.03,
+			ry: 0.05,
+			rz: 0.07,
+		},
+		size: size
+	};
+
+	var width = size / 1.7321; // sqrt(3)
+	var geometry = new THREE.CubeGeometry( width, width, width );
+	var material = new THREE.MeshBasicMaterial( {color: 0x000000} );
+	asteroid.mesh = new THREE.Mesh( geometry, material );
+	
+	asteroid.mesh.position.x = ( gameSize + asteroid.size ) / 2;
+	asteroid.mesh.position.y = ( gameSize + asteroid.size ) / 2;
+	
+	scene.add( asteroid.mesh );
+	asteroids.push( asteroid );
+}
+
+function updateAsteroids() {
+	asteroids.forEach( function( asteroid ) {
+		asteroid.mesh.position.x += asteroid.vel.x;
+		asteroid.mesh.position.y += asteroid.vel.y;
+		asteroid.mesh.rotation.x += asteroid.vel.rx;
+		asteroid.mesh.rotation.y += asteroid.vel.ry;
+		asteroid.mesh.rotation.z += asteroid.vel.rz;
+		
+		wrapPosition( asteroid.mesh, asteroid.size );
+	} );
+}
+
+function wrapPosition( mesh, deadzone ) {
+	var wrapSize = gameSize + deadzone;
+	if (mesh.position.x >  wrapSize/2) mesh.position.x -= wrapSize;
+	if (mesh.position.x < -wrapSize/2) mesh.position.x += wrapSize;
+	if (mesh.position.y >  wrapSize/2) mesh.position.y -= wrapSize;
+	if (mesh.position.y < -wrapSize/2) mesh.position.y += wrapSize;
+}
+
 function update() {
 	var delta = clock.getDelta() * 60.0;
 
-	if (key[code.UP]) {
-		player.vel.x -= delta * player.accel * Math.sin(player.mesh.rotation.z);
-		player.vel.y += delta * player.accel * Math.cos(player.mesh.rotation.z);
+	if ( key[code.UP] ) {
+		player.vel.x -= delta * player.accel * Math.sin( player.mesh.rotation.z );
+		player.vel.y += delta * player.accel * Math.cos( player.mesh.rotation.z );
 	}
-	if (key[code.DOWN]) {
-		player.vel.x += delta * player.accel * Math.sin(player.mesh.rotation.z);
-		player.vel.y -= delta * player.accel * Math.cos(player.mesh.rotation.z);
+	if ( key[code.DOWN] ) {
+		player.vel.x += delta * player.accel * Math.sin( player.mesh.rotation.z );
+		player.vel.y -= delta * player.accel * Math.cos( player.mesh.rotation.z );
 	}
-	if (key[code.LEFT])  player.rotVel += delta * player.rotAccel;
-	if (key[code.RIGHT]) player.rotVel -= delta * player.rotAccel;
+	if ( key[code.LEFT] )  player.rotVel += delta * player.rotAccel;
+	if ( key[code.RIGHT] ) player.rotVel -= delta * player.rotAccel;
 
-	player.rotVel *= Math.pow(player.dampRot, delta);
-	player.vel.x *= Math.pow(player.dampVel, delta);
-	player.vel.y *= Math.pow(player.dampVel, delta);
+	player.rotVel *= Math.pow( player.dampRot, delta );
+	player.vel.x  *= Math.pow( player.dampVel, delta );
+	player.vel.y  *= Math.pow( player.dampVel, delta );
 
 	player.mesh.rotation.z += delta * player.rotVel;
 	player.mesh.position.x += delta * player.vel.x;
 	player.mesh.position.y += delta * player.vel.y;
 	
-	/* Player Wraparound */
-	if (player.mesh.position.x >  gameSize/2) player.mesh.position.x -= gameSize;
-	if (player.mesh.position.x < -gameSize/2) player.mesh.position.x += gameSize;
-	if (player.mesh.position.y >  gameSize/2) player.mesh.position.y -= gameSize;
-	if (player.mesh.position.y < -gameSize/2) player.mesh.position.y += gameSize;
+	wrapPosition( player.mesh, 0 );
+	
+	updateAsteroids();
 }
 
 function render() {
