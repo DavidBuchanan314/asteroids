@@ -81,6 +81,11 @@ function init() {
 	document.body.appendChild( renderer.domElement );
 
 	clock = new THREE.Clock();
+	
+	for (var i = 0; i < 25; i++) {
+		spawnAsteroid( Math.random() * 80 + 10 );
+	}
+	
 	loop();
 }
 
@@ -106,6 +111,12 @@ function spawnAsteroid( size ) {
 	
 	asteroid.mesh.position.x = ( gameSize + asteroid.size ) / 2;
 	asteroid.mesh.position.y = ( gameSize + asteroid.size ) / 2;
+	
+	if (Math.random() > 0.5) {
+		asteroid.mesh.position.x *= (Math.random() - 0.5) * 2;
+	} else {
+		asteroid.mesh.position.y *= (Math.random() - 0.5) * 2;
+	}
 	
 	scene.add( asteroid.mesh );
 	asteroids.push( asteroid );
