@@ -35,7 +35,7 @@ var gameSize = 512; // relative value
 var camera, scene, renderer, clock;
 
 function init() {
-	camera = new THREE.PerspectiveCamera( 90, 1, 1, 1000 );
+	camera = new THREE.OrthographicCamera( -gameSize/2, gameSize/2, gameSize/2, -gameSize/2, 1, 1000 );
 	camera.position.z = gameSize/2;
 
 	/* Player Setup */
