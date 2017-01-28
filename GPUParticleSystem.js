@@ -204,9 +204,6 @@ THREE.GPUParticleSystem = function(options) {
 	self.particleNoiseTex = self.PARTICLE_NOISE_TEXTURE || textureLoader.load("textures/perlin-512.png");
 	self.particleNoiseTex.wrapS = self.particleNoiseTex.wrapT = THREE.RepeatWrapping;
 
-	self.particleSpriteTex = self.PARTICLE_SPRITE_TEXTURE || textureLoader.load("textures/particle2.png");
-	self.particleSpriteTex.wrapS = self.particleSpriteTex.wrapT = THREE.RepeatWrapping;
-
 	self.particleShaderMat = new THREE.ShaderMaterial({
 		transparent: true,
 		depthWrite: false,
