@@ -101,8 +101,10 @@ function spawnAsteroid( size ) {
 
 	var width = size / 1.7321; // sqrt(3)
 	var geometry = new THREE.CubeGeometry( width, width, width );
+	
 	geometry.rotateX(Math.random()*2*Math.PI);
 	geometry.rotateY(Math.random()*2*Math.PI);
+	
 	var material = new THREE.MeshBasicMaterial( {color: 0x000000} );
 	asteroid.mesh = new THREE.Mesh( geometry, material );
 	
@@ -171,9 +173,9 @@ function update() {
 	player.vel.x  *= Math.pow( player.dampVel, delta );
 	player.vel.y  *= Math.pow( player.dampVel, delta );
 
-	player.mesh.rotation.z += delta * player.rotVel;
 	player.mesh.position.x += delta * player.vel.x;
 	player.mesh.position.y += delta * player.vel.y;
+	player.mesh.rotation.z += delta * player.rotVel;
 	
 	wrapPosition( player.mesh, 0 );
 	
