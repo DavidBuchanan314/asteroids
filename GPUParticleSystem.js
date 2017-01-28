@@ -171,8 +171,6 @@ THREE.GPUParticleSystem = function(options) {
 			'varying vec4 vColor;',
 			'varying float lifeLeft;',
 
-			'uniform sampler2D tSprite;',
-
 			'void main() {',
 
 			'float alpha = 0.;',
@@ -183,9 +181,7 @@ THREE.GPUParticleSystem = function(options) {
 			'alpha = lifeLeft * .75;',
 			'}',
 
-			'vec4 tex = texture2D( tSprite, gl_PointCoord );',
-
-			'gl_FragColor = vec4( vColor.rgb * tex.a, alpha * tex.a );',
+			'gl_FragColor = vec4( 0, 0, 0, alpha * 0.4 );',
 			'}'
 
 		].join("\n")
@@ -223,9 +219,6 @@ THREE.GPUParticleSystem = function(options) {
 			},
 			"tNoise": {
 				value: self.particleNoiseTex
-			},
-			"tSprite": {
-				value: self.particleSpriteTex
 			}
 		},
 		//blending: THREE.SubtractiveBlending,

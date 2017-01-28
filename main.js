@@ -59,7 +59,7 @@ function init() {
 	
 	options = {
 		position: new THREE.Vector3(0, 0, 0),
-		positionRandomness: 1.5,
+		positionRandomness: 0,
 		velocity: new THREE.Vector3(0, 5, 0),
 		velocityRandomness: 0.6,
 		color: 0x000000,
