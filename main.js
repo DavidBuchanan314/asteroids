@@ -32,7 +32,8 @@ var asteroidBaseVel = 2;
 var size = Math.min(window.innerWidth, window.innerHeight); // square aspect ratio;
 var gameSize = 512; // relative value
 
-var camera, scene, renderer, clock;
+var camera, scene, renderer, clock, delta, particleSystem, options, spawnerOptions;
+var particleTick = 0;
 
 function init() {
 	camera = new THREE.OrthographicCamera( -gameSize/2, gameSize/2, gameSize/2, -gameSize/2, 1, 1000 );
@@ -52,10 +53,26 @@ function init() {
 	
 	player.mesh = new THREE.Mesh( geometry, material );
 	
-	/* End Player Setup */
+	/* Particle Initialisation */
+	
+	particleSystem = new THREE.GPUParticleSystem( {maxParticles: 5000} );
+	
+	options = {
+		position: new THREE.Vector3(0, 0, 0),
+		positionRandomness: 1.5,
+		velocity: new THREE.Vector3(0, 5, 0),
+		velocityRandomness: 0.6,
+		color: 0x000000,
+		colorRandomness: 0,
+		turbulence: 0.5,
+		lifetime: 20,
+		size: 10,
+		sizeRandomness: 1
+	};
 	
 	scene = new THREE.Scene();
 	scene.add( player.mesh );
+	scene.add( particleSystem );
 	
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setPixelRatio( window.devicePixelRatio );
@@ -93,11 +110,11 @@ function spawnAsteroid( size ) {
 
 function updateAsteroids() {
 	asteroids.forEach( function( asteroid ) {
-		asteroid.mesh.position.x += asteroid.vel.x;
-		asteroid.mesh.position.y += asteroid.vel.y;
-		asteroid.mesh.rotation.x += asteroid.vel.rx;
-		asteroid.mesh.rotation.y += asteroid.vel.ry;
-		asteroid.mesh.rotation.z += asteroid.vel.rz;
+		asteroid.mesh.position.x += delta * asteroid.vel.x;
+		asteroid.mesh.position.y += delta * asteroid.vel.y;
+		asteroid.mesh.rotation.x += delta * asteroid.vel.rx;
+		asteroid.mesh.rotation.y += delta * asteroid.vel.ry;
+		asteroid.mesh.rotation.z += delta * asteroid.vel.rz;
 		
 		wrapPosition( asteroid.mesh, asteroid.size );
 	} );
@@ -111,17 +128,30 @@ function wrapPosition( mesh, deadzone ) {
 	if (mesh.position.y < -wrapSize/2) mesh.position.y += wrapSize;
 }
 
+function updateParticles() {
+
+	if ( key[code.UP] ) {
+		options.position = player.mesh.position;
+		options.velocity.x = Math.sin(player.mesh.rotation.z);
+		options.velocity.y = -Math.cos(player.mesh.rotation.z);
+
+		for (var i = 0; i < 50 * delta; i++) {
+			particleSystem.spawnParticle(options);
+		}
+	}
+
+	particleTick += delta / 2;
+	particleSystem.update(particleTick);
+}
+
 function update() {
-	var delta = clock.getDelta() * 60.0;
+	delta = clock.getDelta() * 60.0;
 
 	if ( key[code.UP] ) {
 		player.vel.x -= delta * player.accel * Math.sin( player.mesh.rotation.z );
 		player.vel.y += delta * player.accel * Math.cos( player.mesh.rotation.z );
 	}
-	if ( key[code.DOWN] ) {
-		player.vel.x += delta * player.accel * Math.sin( player.mesh.rotation.z );
-		player.vel.y -= delta * player.accel * Math.cos( player.mesh.rotation.z );
-	}
+
 	if ( key[code.LEFT] )  player.rotVel += delta * player.rotAccel;
 	if ( key[code.RIGHT] ) player.rotVel -= delta * player.rotAccel;
 
@@ -136,6 +166,7 @@ function update() {
 	wrapPosition( player.mesh, 0 );
 	
 	updateAsteroids();
+	updateParticles();
 }
 
 function render() {
