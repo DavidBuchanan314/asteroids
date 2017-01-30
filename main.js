@@ -27,6 +27,12 @@ var player = {
 var asteroids = [];
 var asteroidBaseVel = 2;
 
+var bullets = [];
+var bulletVel = 5;
+var lastBullet = 0;
+var bulletRate= 0.2;
+var bulletLifespan = 100;
+
 /* Three.js Stuff */
 
 var size = Math.min(window.innerWidth, window.innerHeight); // square aspect ratio;
@@ -85,7 +91,7 @@ function init() {
 	clock = new THREE.Clock();
 	
 	for (var i = 0; i < 25; i++) {
-		spawnAsteroid( Math.random() * 80 + 10 );
+		spawnAsteroid( Math.random() * 80 + 20 );
 	}
 	
 	loop();
@@ -98,7 +104,8 @@ function spawnAsteroid( size ) {
 			y: ( Math.random() - 0.5 ) * asteroidBaseVel,
 			r: 0.03 + Math.random() * 0.04,
 		},
-		size: size
+		size: size,
+		health: size
 	};
 
 	var width = size / SQRT3;
@@ -145,6 +152,43 @@ function updateAsteroids() {
 	} );
 }
 
+function spawnBullet() {
+	var bullet = {
+		vel: {
+			x: -bulletVel * Math.sin(player.mesh.rotation.z) + player.vel.x,
+			y: +bulletVel * Math.cos(player.mesh.rotation.z) + player.vel.y,
+		},
+		age: 0
+	};
+	
+	var geometry = new THREE.CubeGeometry( 5, 5, 5 );
+	var material = new THREE.MeshBasicMaterial( {color: 0x000000} );
+	bullet.mesh = new THREE.Mesh( geometry, material );
+	
+	bullet.mesh.position.x = player.mesh.position.x;
+	bullet.mesh.position.y = player.mesh.position.y;
+	
+	scene.add( bullet.mesh );
+	bullets.push( bullet );
+}
+
+function updateBullets() {
+	bullets.forEach( function( bullet ) {
+		bullet.mesh.position.x += delta * bullet.vel.x;
+		bullet.mesh.position.y += delta * bullet.vel.y;
+		bullet.mesh.rotation.z += 0.3;
+		
+		wrapPosition( bullet.mesh, 0 );
+		
+		bullet.age += delta;
+		
+		if ( bullet.age > bulletLifespan ) {
+			scene.remove( bullet.mesh );
+			bullets.shift(); // slightly risky, assumes bullets always spawn in time order
+		}
+	} );
+}
+
 function wrapPosition( mesh, deadzone ) {
 	var wrapSize = gameSize + deadzone;
 	if (mesh.position.x >  wrapSize/2) mesh.position.x -= wrapSize;
@@ -164,7 +208,7 @@ function updateParticles() {
 
 	if ( key[code.UP] ) {
 		options.position = player.mesh.position;
-		options.velocity.x = Math.sin(player.mesh.rotation.z);
+		options.velocity.x =  Math.sin(player.mesh.rotation.z);
 		options.velocity.y = -Math.cos(player.mesh.rotation.z);
 
 		for (var i = 0; i < 50 * delta; i++) {
@@ -186,6 +230,15 @@ function update() {
 
 	if ( key[code.LEFT] )  player.rotVel += delta * player.rotAccel;
 	if ( key[code.RIGHT] ) player.rotVel -= delta * player.rotAccel;
+	
+	if ( key[code.FIRE] ) {
+		if ( clock.getElapsedTime() - lastBullet > bulletRate ) {
+			spawnBullet();
+			lastBullet = clock.getElapsedTime();
+		}
+	} else {
+		lastBullet = 0;
+	}
 
 	player.rotVel *= Math.pow( player.dampRot, delta );
 	player.vel.x  *= Math.pow( player.dampVel, delta );
@@ -198,6 +251,7 @@ function update() {
 	wrapPosition( player.mesh, 0 );
 	
 	updateAsteroids();
+	updateBullets();
 	updateParticles();
 }
 
