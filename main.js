@@ -122,6 +122,7 @@ function spawnAsteroid( size ) {
 		blendEquation: THREE.SubtractEquation,
 		blendSrc: THREE.OneFactor,
 		blendDst: THREE.OneFactor,
+		depthTest: false,
 	} );
 	asteroid.mesh = new THREE.Mesh( geometry, material );
 	
