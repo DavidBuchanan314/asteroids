@@ -60,6 +60,7 @@ function init() {
 	var material = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.DoubleSide} );
 	
 	player.mesh = new THREE.Mesh( geometry, material );
+	player.mesh.position.z = 100;
 	
 	/* Particle Initialisation */
 	
@@ -114,7 +115,14 @@ function spawnAsteroid( size ) {
 	geometry.rotateX(Math.random()*2*Math.PI);
 	geometry.rotateY(Math.random()*2*Math.PI);
 	
-	var material = new THREE.MeshBasicMaterial( {color: 0x000000} );
+	var material = new THREE.MeshBasicMaterial( {
+		color: 0xFFFFFF,
+		transparent: true,
+		blending: THREE.CustomBlending,
+		blendEquation: THREE.SubtractEquation,
+		blendSrc: THREE.OneFactor,
+		blendDst: THREE.OneFactor,
+	} );
 	asteroid.mesh = new THREE.Mesh( geometry, material );
 	
 	asteroid.mesh.rotation.x = Math.random()*2*Math.PI;
@@ -146,7 +154,7 @@ function updateAsteroids() {
 		var radius = ( asteroid.size * 0.8 ) / 2 + 5;
 		
 		if ( dist < radius * radius ) {
-			player.mesh.material.color.setHex( 0xff0000 );
+			player.mesh.material.color.setHex( 0xFFFFFF );
 		}
 		
 	} );

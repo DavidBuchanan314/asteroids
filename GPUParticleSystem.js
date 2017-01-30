@@ -218,7 +218,6 @@ THREE.GPUParticleSystem = function(options) {
 				value: self.particleNoiseTex
 			}
 		},
-		//blending: THREE.SubtractiveBlending,
 		vertexShader: GPUParticleShader.vertexShader,
 		fragmentShader: GPUParticleShader.fragmentShader
 	});
