@@ -35,6 +35,8 @@ var gameSize = 512; // relative value
 var camera, scene, renderer, clock, delta, particleSystem, options, spawnerOptions;
 var particleTick = 0;
 
+var SQRT3 = Math.sqrt(3);
+
 function init() {
 	camera = new THREE.OrthographicCamera( -gameSize/2, gameSize/2, gameSize/2, -gameSize/2, 1, 1000 );
 	camera.position.z = gameSize/2;
@@ -99,7 +101,7 @@ function spawnAsteroid( size ) {
 		size: size
 	};
 
-	var width = size / 1.7321; // sqrt(3)
+	var width = size / SQRT3;
 	var geometry = new THREE.CubeGeometry( width, width, width );
 	
 	geometry.rotateX(Math.random()*2*Math.PI);
@@ -125,12 +127,21 @@ function spawnAsteroid( size ) {
 }
 
 function updateAsteroids() {
+	player.mesh.material.color.setHex( 0x000000 );
 	asteroids.forEach( function( asteroid ) {
 		asteroid.mesh.position.x += delta * asteroid.vel.x;
 		asteroid.mesh.position.y += delta * asteroid.vel.y;
 		asteroid.mesh.rotation.z += delta * asteroid.vel.r;
 		
 		wrapPosition( asteroid.mesh, asteroid.size );
+		
+		var dist = getDistanceSquared( asteroid.mesh.position, player.mesh.position )
+		var radius = ( asteroid.size * 0.8 ) / 2 + 5;
+		
+		if ( dist < radius * radius ) {
+			player.mesh.material.color.setHex( 0xff0000 );
+		}
+		
 	} );
 }
 
@@ -140,6 +151,13 @@ function wrapPosition( mesh, deadzone ) {
 	if (mesh.position.x < -wrapSize/2) mesh.position.x += wrapSize;
 	if (mesh.position.y >  wrapSize/2) mesh.position.y -= wrapSize;
 	if (mesh.position.y < -wrapSize/2) mesh.position.y += wrapSize;
+}
+
+function getDistanceSquared( a, b ) { // 2d distance in xy plane
+	return ( a.x - b.x )
+	     * ( a.x - b.x )
+	     + ( a.y - b.y )
+	     * ( a.y - b.y );
 }
 
 function updateParticles() {
