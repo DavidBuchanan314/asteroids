@@ -143,7 +143,7 @@ function spawnAsteroid( size ) {
 }
 
 function updateAsteroids() {
-	player.mesh.material.color.setHex( 0x000000 );
+	var playerCollision = false
 	asteroids.forEach( function( asteroid ) {
 		asteroid.mesh.position.x += delta * asteroid.vel.x;
 		asteroid.mesh.position.y += delta * asteroid.vel.y;
@@ -155,7 +155,7 @@ function updateAsteroids() {
 		var radius = ( asteroid.size * 0.8 ) / 2 + 5;
 		
 		if ( dist < radius * radius ) {
-			player.mesh.material.color.setHex( 0xFFFFFF );
+			playerCollision = true;
 		}
 		
 	} );
@@ -193,7 +193,7 @@ function updateBullets() {
 		
 		if ( bullet.age > bulletLifespan ) {
 			scene.remove( bullet.mesh );
-			bullets.shift(); // slightly risky, assumes bullets always spawn in time order
+			bullets.splice( bullets.indexOf( bullet ), 1 );
 		}
 	} );
 }
