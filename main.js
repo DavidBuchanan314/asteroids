@@ -69,7 +69,7 @@ function init() {
 	options = {
 		position: new THREE.Vector3(0, 0, 0),
 		positionRandomness: 0,
-		velocity: new THREE.Vector3(0, 5, 0),
+		velocity: new THREE.Vector3(0, 0, 0),
 		velocityRandomness: 0.6,
 		color: 0x000000,
 		colorRandomness: 0,
@@ -92,13 +92,13 @@ function init() {
 	clock = new THREE.Clock();
 	
 	for (var i = 0; i < 25; i++) {
-		spawnAsteroid( Math.random() * 80 + 20 );
+		spawnAsteroid( Math.random() * 80 + 30, null );
 	}
 	
 	loop();
 }
 
-function spawnAsteroid( size ) {
+function spawnAsteroid( size, position ) {
 	var asteroid = {
 		vel: {
 			x: ( Math.random() - 0.5 ) * asteroidBaseVel,
@@ -132,18 +132,49 @@ function spawnAsteroid( size ) {
 	asteroid.mesh.position.x = ( gameSize + asteroid.size ) / 2;
 	asteroid.mesh.position.y = ( gameSize + asteroid.size ) / 2;
 	
-	if (Math.random() > 0.5) {
-		asteroid.mesh.position.x *= (Math.random() - 0.5) * 2;
+	if ( position == null ) {
+		if ( Math.random() > 0.5 ) {
+			asteroid.mesh.position.x *= (Math.random() - 0.5) * 2;
+		} else {
+			asteroid.mesh.position.y *= (Math.random() - 0.5) * 2;
+		}
 	} else {
-		asteroid.mesh.position.y *= (Math.random() - 0.5) * 2;
+		asteroid.mesh.position.x = position.x;
+		asteroid.mesh.position.y = position.y;
 	}
 	
 	scene.add( asteroid.mesh );
 	asteroids.push( asteroid );
 }
 
+function destroyAsteroid( asteroid ) {
+	scene.remove( asteroid.mesh );
+	asteroids.splice( asteroids.indexOf( asteroid ), 1 );
+	
+	var options = {
+		position: asteroid.mesh.position,
+		positionRandomness: 5.0,
+		velocity: new THREE.Vector3(0, 0, 0),
+		velocityRandomness: 0.6,
+		color: 0x000000,
+		colorRandomness: 0,
+		turbulence: 0.5,
+		lifetime: 20,
+		size: 10,
+		sizeRandomness: 1
+	};
+	
+	for ( var i = 0; i < asteroid.size * 100; i++) {
+		particleSystem.spawnParticle( options );
+	}
+	
+	for ( var r = asteroid.size * 0.6; r > 30; r *= 0.6 ) {
+		spawnAsteroid( Math.random() * (asteroid.size - 30) * 0.5 + 30, asteroid.mesh.position );
+	}
+}
+
 function updateAsteroids() {
-	var playerCollision = false
+	var playerCollision = false;
 	asteroids.forEach( function( asteroid ) {
 		asteroid.mesh.position.x += delta * asteroid.vel.x;
 		asteroid.mesh.position.y += delta * asteroid.vel.y;
@@ -151,12 +182,24 @@ function updateAsteroids() {
 		
 		wrapPosition( asteroid.mesh, asteroid.size );
 		
-		var dist = getDistanceSquared( asteroid.mesh.position, player.mesh.position )
-		var radius = ( asteroid.size * 0.8 ) / 2 + 5;
+		var dist = getDistanceSquared( asteroid.mesh.position, player.mesh.position );
+		var radius = ( asteroid.size * 0.5 ) / 2;
 		
-		if ( dist < radius * radius ) {
+		if ( dist < (radius+5) * (radius+5) ) {
 			playerCollision = true;
 		}
+		
+		var bulletCollision = false;
+		
+		bullets.forEach( function( bullet ) {
+			dist = getDistanceSquared( asteroid.mesh.position, bullet.mesh.position );
+			if ( dist < radius * radius ) {
+				bulletCollision = true;
+				destroyBullet( bullet );
+			}
+		} );
+		
+		if ( bulletCollision ) destroyAsteroid( asteroid );
 		
 	} );
 }
@@ -181,6 +224,11 @@ function spawnBullet() {
 	bullets.push( bullet );
 }
 
+function destroyBullet( bullet ) {
+	scene.remove( bullet.mesh );
+	bullets.splice( bullets.indexOf( bullet ), 1 );
+}
+
 function updateBullets() {
 	bullets.forEach( function( bullet ) {
 		bullet.mesh.position.x += delta * bullet.vel.x;
@@ -191,10 +239,8 @@ function updateBullets() {
 		
 		bullet.age += delta;
 		
-		if ( bullet.age > bulletLifespan ) {
-			scene.remove( bullet.mesh );
-			bullets.splice( bullets.indexOf( bullet ), 1 );
-		}
+		if ( bullet.age > bulletLifespan ) destroyBullet( bullet );
+		
 	} );
 }
 
